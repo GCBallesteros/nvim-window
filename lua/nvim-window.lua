@@ -93,18 +93,7 @@ local function window_keys(windows)
     index = index == #chars and 1 or index + 1
   end
 
-  return mapping
-end
-
--- Returns true if we need to ask for a second character.
-local function ask_second_char(keys, start)
-  for key, _ in pairs(keys) do
-    if key ~= start and key:sub(1, 1) == start then
-      return true
-    end
-  end
-
-  return false
+  return { mapping, index - 1 }
 end
 
 -- Opens all the floating windows in (roughly) the middle of every window.
@@ -155,7 +144,7 @@ local function open_floats(mapping)
   end
 
   -- We need to redraw here, otherwise the floats won't show up
-  vim.cmd('redraw')
+  vim.cmd 'redraw'
 
   return floats
 end
@@ -184,10 +173,20 @@ function M.pick()
     return api.nvim_win_get_config(id).relative == ''
   end, api.nvim_tabpage_list_wins(0))
 
-  local window_keys = window_keys(windows)
+  local _aux = window_keys(windows)
+  local window_keys = _aux[1]
+  local n_windows = _aux[2]
+
+  if n_windows == 2 then
+    for _, win in pairs(window_keys) do
+      api.nvim_set_current_win(win)
+        return nil
+    end
+  end
+
   local floats = open_floats(window_keys)
   local key = get_char()
-  local window = nil
+  -- local window = nil
 
   if not key or key == escape then
     close_floats(floats)
