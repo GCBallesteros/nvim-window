@@ -93,7 +93,7 @@ local function window_keys(windows)
         index = index == #chars and 1 or index + 1
     end
 
-    return { mapping, index - 1 }
+    return mapping, index - 1
 end
 
 -- Opens all the floating windows in (roughly) the middle of every window.
@@ -173,18 +173,18 @@ function M.pick()
         return api.nvim_win_get_config(id).relative == ''
     end, api.nvim_tabpage_list_wins(0))
 
-    local _aux = window_keys(windows)
-    local window_keys = _aux[1]
-    local n_windows = _aux[2]
+    local windows_map
+    local n_windows
+    windows_map, n_windows = window_keys(windows)
 
     if n_windows == 2 then
-        for _, win in pairs(window_keys) do
+        for _, win in pairs(windows_map) do
             api.nvim_set_current_win(win)
             return nil
         end
     end
 
-    local floats = open_floats(window_keys)
+    local floats = open_floats(windows_map)
     local key = get_char()
     -- local window = nil
 
@@ -193,11 +193,11 @@ function M.pick()
         return
     end
 
-    local window = window_keys[key]
+    local window = windows_map[key]
     local extra = {}
     local choices = 0
 
-    for hint, win in pairs(window_keys) do
+    for hint, win in pairs(windows_map) do
         if vim.startswith(hint, key) then
             extra[hint] = win
             choices = choices + 1
@@ -214,7 +214,7 @@ function M.pick()
         if second then
             local combined = key .. second
 
-            window = window_keys[combined] or window_keys[key]
+            window = windows_map[combined] or windows_map[key]
         else
             window = nil
         end
